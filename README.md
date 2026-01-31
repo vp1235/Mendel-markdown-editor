@@ -51,4 +51,4 @@ Replace `/Users/YOU/` with your home directory. The hook script opens (or refres
 
 ## License
 
-Copyright (c) 2025-2026 Victor Keegan de la Pena. All rights reserved. See [LICENSE](LICENSE).
+Copyright (c) 2025-2026 Victor Keegan de la Peña. All rights reserved. See [LICENSE](LICENSE).
