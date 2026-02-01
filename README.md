@@ -32,7 +32,21 @@ cargo tauri dev
 
 ## Claude Code Integration
 
-Mendel can auto-preview markdown files every time Claude Code writes or edits a `.md` file. Add a PostToolUse hook to your Claude Code settings (`~/.claude/settings.json`):
+Mendel can auto-preview markdown files every time Claude Code writes or edits a `.md` file.
+
+1. Create a hook script (e.g. `~/.claude-hooks/markdown-preview.sh`):
+
+```bash
+#!/bin/bash
+INPUT=$(cat)
+FP=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
+[[ "$FP" == *.md ]] && echo "$FP" > /tmp/.markdowneditor-open && open -a "Markdown Editor"
+exit 0
+```
+
+2. Make it executable: `chmod +x ~/.claude-hooks/markdown-preview.sh`
+
+3. Add a PostToolUse hook to `~/.claude/settings.json`:
 
 ```json
 {
@@ -40,14 +54,19 @@ Mendel can auto-preview markdown files every time Claude Code writes or edits a 
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
-        "command": "/Users/YOU/Code/markdowneditor/preview-hook.sh \"$FILEPATH\""
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude-hooks/markdown-preview.sh"
+          }
+        ]
       }
     ]
   }
 }
 ```
 
-Replace `/Users/YOU/` with your home directory. The hook script opens (or refreshes) Mendel with the file that was just modified.
+The app polls for the signal file and automatically loads the updated markdown with live preview.
 
 ## License
 

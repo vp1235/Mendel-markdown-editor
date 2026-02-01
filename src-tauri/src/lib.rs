@@ -1,6 +1,8 @@
 mod menu;
 
 use std::fs;
+use std::sync::Mutex;
+use tauri::{Emitter, Manager};
 
 #[tauri::command]
 fn read_file_contents(path: String) -> Result<String, String> {
@@ -25,12 +27,20 @@ fn check_pending_open() -> Option<String> {
     }
 }
 
+struct OpenedFile(Mutex<Option<String>>);
+
+#[tauri::command]
+fn take_opened_file(state: tauri::State<OpenedFile>) -> Option<String> {
+    state.0.lock().unwrap().take()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![read_file_contents, write_file_contents, check_pending_open])
+        .manage(OpenedFile(Mutex::new(None)))
+        .invoke_handler(tauri::generate_handler![read_file_contents, write_file_contents, check_pending_open, take_opened_file])
         .setup(|app| {
             let handle = app.handle();
             let menu = menu::build_menu(handle)?;
@@ -43,6 +53,20 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application");
+
+    app.run(|handle, event| {
+        if let tauri::RunEvent::Opened { urls } = event {
+            for url in urls {
+                if let Ok(path) = url.to_file_path() {
+                    let path_str = path.to_string_lossy().to_string();
+                    let _ = handle.emit("open-file", &path_str);
+                    if let Some(state) = handle.try_state::<OpenedFile>() {
+                        *state.0.lock().unwrap() = Some(path_str);
+                    }
+                }
+            }
+        }
+    });
 }

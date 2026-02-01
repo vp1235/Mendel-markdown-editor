@@ -2,7 +2,7 @@ use tauri::menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 use tauri::{AppHandle, Emitter, Runtime};
 
 pub fn build_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<tauri::menu::Menu<R>> {
-    let app_menu = SubmenuBuilder::new(app, "Markdown Editor")
+    let app_menu = SubmenuBuilder::new(app, "Mendel")
         .about(None)
         .separator()
         .services()

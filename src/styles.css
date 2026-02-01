@@ -7,6 +7,7 @@
   --border: #181a1f;
   --accent: #61afef;
   --divider-width: 6px;
+  --tab-height: 36px;
 }
 
 * {
@@ -24,10 +25,16 @@ html, body {
     Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+}
+
 #app {
   display: grid;
   grid-template-columns: 1fr var(--divider-width) 1fr;
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
   width: 100vw;
 }
 
@@ -159,6 +166,84 @@ html, body {
 /* KaTeX block math centering */
 #preview-pane .katex-display {
   margin: 1em 0;
+}
+
+/* Tab bar */
+#tab-bar {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-light);
+  border-bottom: 1px solid var(--border);
+  height: var(--tab-height);
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+#tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  height: 100%;
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+  color: #6b727d;
+  font-size: 13px;
+  white-space: nowrap;
+  min-width: 0;
+  -webkit-app-region: no-drag;
+  transition: background 0.1s;
+}
+
+.tab:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tab.active {
+  background: var(--bg);
+  color: var(--fg);
+  border-bottom: 2px solid var(--accent);
+}
+
+.tab-dirty {
+  color: var(--accent);
+  font-size: 10px;
+  display: none;
+}
+
+.tab.dirty .tab-dirty {
+  display: inline;
+}
+
+.tab-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.tab-close {
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0;
+  padding: 0 2px;
+  border-radius: 3px;
+  transition: opacity 0.1s, background 0.1s;
+}
+
+.tab:hover .tab-close,
+.tab.active .tab-close {
+  opacity: 0.6;
+}
+
+.tab-close:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Prevent user-select during drag */
