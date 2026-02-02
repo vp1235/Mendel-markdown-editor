@@ -251,3 +251,32 @@ body.resizing {
   user-select: none;
   cursor: col-resize;
 }
+
+/* Print styles -- used by Export as PDF (window.print) */
+@media print {
+  #tab-bar, #editor-pane, #divider { display: none !important; }
+  #app { display: block !important; }
+  html, body {
+    background: #ffffff !important;
+    color: #333333 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  #preview-pane {
+    overflow: visible !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #333333 !important;
+  }
+  #preview-pane h1, #preview-pane h2, #preview-pane h3,
+  #preview-pane h4, #preview-pane h5, #preview-pane h6 { color: #1a1a1a !important; }
+  #preview-pane h1, #preview-pane h2 { border-bottom-color: #cccccc !important; }
+  #preview-pane code { background: #f5f5f5 !important; color: #333333 !important; }
+  #preview-pane pre { background: #f5f5f5 !important; color: #333333 !important; overflow-x: visible !important; white-space: pre-wrap !important; }
+  #preview-pane pre code { background: none !important; }
+  #preview-pane blockquote { border-left-color: #cccccc !important; color: #666666 !important; }
+  #preview-pane a { color: #0066cc !important; }
+  #preview-pane th, #preview-pane td { border-color: #cccccc !important; }
+  #preview-pane th { background: #f0f0f0 !important; color: #1a1a1a !important; }
+  #preview-pane hr { border-top-color: #cccccc !important; }
+}

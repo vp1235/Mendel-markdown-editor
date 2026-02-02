@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicedoc/tauri-schema/main/tauri.conf.json.schema",
-  "productName": "Markdown Editor",
+  "productName": "Mendel",
   "version": "0.1.0",
   "identifier": "com.markdowneditor.dev",
   "build": {
@@ -13,7 +13,7 @@
     "withGlobalTauri": false,
     "windows": [
       {
-        "title": "Markdown Editor",
+        "title": "Mendel",
         "width": 1200,
         "height": 800,
         "minWidth": 600,
@@ -25,6 +25,9 @@
     }
   },
   "bundle": {
+    "resources": [
+      "resources/*"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

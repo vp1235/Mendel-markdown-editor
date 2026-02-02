@@ -2,7 +2,7 @@ import { EditorView, basicSetup } from "codemirror";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorState } from "@codemirror/state";
+import { EditorState, Extension } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
 
 export type DocChangeCallback = (doc: string) => void;
@@ -10,7 +10,8 @@ export type DocChangeCallback = (doc: string) => void;
 export function createEditor(
   parent: HTMLElement,
   onChange: DocChangeCallback,
-  extraKeys: { key: string; run: () => boolean }[] = []
+  extraKeys: { key: string; run: () => boolean }[] = [],
+  extraExtensions: Extension[] = []
 ): EditorView {
   const state = EditorState.create({
     doc: "",
@@ -25,6 +26,7 @@ export function createEditor(
           onChange(update.state.doc.toString());
         }
       }),
+      ...extraExtensions,
     ],
   });
 

@@ -40,7 +40,7 @@ Mendel can auto-preview markdown files every time Claude Code writes or edits a 
 #!/bin/bash
 INPUT=$(cat)
 FP=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
-[[ "$FP" == *.md ]] && echo "$FP" > /tmp/.markdowneditor-open && open -a "Markdown Editor"
+[[ "$FP" == *.md ]] && echo "$FP" > /tmp/.markdowneditor-open && open -a "Mendel"
 exit 0
 ```
 

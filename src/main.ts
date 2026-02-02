@@ -3,8 +3,11 @@ import { renderPreview } from "./preview";
 import { initSplitPane } from "./split-pane";
 import { TabManager, Tab } from "./tabs";
 import { openFileDialog, saveToFile, saveFileAsDialog, readFile, updateTitle } from "./fileops";
+import { exportTxt, exportHtml, exportPdf, exportPng, exportJpg, exportDocx, exportRtf, deriveExportTitle } from "./export";
+import { createImagePasteExtension, createImageDropExtension } from "./image-handler";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { open } from "@tauri-apps/plugin-dialog";
 
 // DOM elements
 const tabBarEl = document.getElementById("tab-bar")!;
@@ -14,7 +17,7 @@ const divider = document.getElementById("divider")!;
 const previewPane = document.getElementById("preview-pane")!;
 
 // Default welcome content for new untitled tabs
-const defaultContent = `# Welcome to Markdown Editor
+const defaultContent = `# Welcome to Mendel
 
 A minimal editor with **live preview** and LaTeX math support.
 
@@ -54,10 +57,20 @@ function getEditorContent(): string {
   return editor.state.doc.toString();
 }
 
+function getActiveFilePath(): string | null {
+  try { return tabs.getActive().filePath; } catch { return null; }
+}
+
+function getBasePath(): string | null {
+  const fp = getActiveFilePath();
+  if (!fp) return null;
+  return fp.substring(0, fp.lastIndexOf("/"));
+}
+
 const editor = createEditor(
   editorPane,
   (doc) => {
-    renderPreview(previewPane, doc);
+    renderPreview(previewPane, doc, getBasePath());
     tabs.updateContent(doc);
     tabs.markDirty(true);
   },
@@ -67,6 +80,10 @@ const editor = createEditor(
     { key: "Mod-Shift-s", run: () => { handleSaveAs(); return true; } },
     { key: "Mod-w", run: () => { tabs.closeTab(tabs.getActive().id); return true; } },
     { key: "Mod-t", run: () => { openNewTab(); return true; } },
+  ],
+  [
+    createImagePasteExtension(getActiveFilePath),
+    createImageDropExtension(getActiveFilePath),
   ]
 );
 
@@ -75,7 +92,8 @@ const tabs = new TabManager(tabBarEl, {
   onSwitch: (newTab: Tab, _oldTab: Tab | null) => {
     // Load the new tab's content into the editor and preview
     setEditorContent(editor, newTab.content);
-    renderPreview(previewPane, newTab.content);
+    const base = newTab.filePath ? newTab.filePath.substring(0, newTab.filePath.lastIndexOf("/")) : null;
+    renderPreview(previewPane, newTab.content, base);
     updateTitle(newTab.filePath);
   },
   onAllClosed: () => {
@@ -133,7 +151,8 @@ async function openFilePath(path: string) {
     setEditorContent(editor, content);
     tabs.updateContent(content);
     tabs.markDirty(false);
-    renderPreview(previewPane, content);
+    const base = path.substring(0, path.lastIndexOf("/"));
+    renderPreview(previewPane, content, base);
   } else {
     const content = await readFile(path);
     tabs.createTab(path, content);
@@ -152,6 +171,41 @@ const appWindow = getCurrentWindow();
 appWindow.listen("menu-open", () => handleOpen());
 appWindow.listen("menu-save", () => handleSave());
 appWindow.listen("menu-save-as", () => handleSaveAs());
+
+// --- Export menu events ---
+appWindow.listen("menu-export-pdf", () => { const t = deriveExportTitle(getEditorContent()); exportPdf(previewPane, t); });
+appWindow.listen("menu-export-html", () => { const t = deriveExportTitle(getEditorContent()); exportHtml(previewPane, t); });
+appWindow.listen("menu-export-docx", () => { const t = deriveExportTitle(getEditorContent()); exportDocx(previewPane.innerHTML, t); });
+appWindow.listen("menu-export-rtf", () => { const t = deriveExportTitle(getEditorContent()); exportRtf(previewPane.innerHTML, t); });
+appWindow.listen("menu-export-png", () => { const t = deriveExportTitle(getEditorContent()); exportPng(previewPane, t); });
+appWindow.listen("menu-export-jpg", () => { const t = deriveExportTitle(getEditorContent()); exportJpg(previewPane, t); });
+appWindow.listen("menu-export-txt", () => { const md = getEditorContent(); exportTxt(md, deriveExportTitle(md)); });
+
+// --- Insert Image menu event ---
+appWindow.listen("menu-insert-image", async () => {
+  const selected = await open({
+    multiple: false,
+    filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg"] }],
+  });
+  if (!selected) return;
+  const srcPath = selected as string;
+  const activeFile = getActiveFilePath();
+  if (!activeFile) {
+    alert("Please save the file first before inserting images.");
+    return;
+  }
+  // Copy the image file directly via Rust: read as base64 then write to assets
+  const dir = activeFile.substring(0, activeFile.lastIndexOf("/"));
+  const assetsDir = `${dir}/assets`;
+  await invoke("ensure_directory", { path: assetsDir });
+  const ext = srcPath.split(".").pop() || "png";
+  const filename = `image-${Date.now()}.${ext}`;
+  const destPath = `${assetsDir}/${filename}`;
+  // Use a Rust command to copy the file
+  await invoke("copy_file", { src: srcPath, dest: destPath });
+  const pos = editor.state.selection.main.head;
+  editor.dispatch({ changes: { from: pos, insert: `![](./assets/${filename})` } });
+});
 
 // --- macOS file association (double-click in Finder) ---
 invoke("take_opened_file").then((path: unknown) => {

@@ -18,13 +18,13 @@ draw = ImageDraw.Draw(img)
 font_cell = ImageFont.truetype('/Library/Fonts/Arial Bold.ttf', 130)
 font_header = ImageFont.truetype('/Library/Fonts/Arial Bold.ttf', 100)
 
-# Layout
-pad = 60
-header_w = 130                 # width of axis label area
+# Layout — centered with even margins
+pad = 100
+header_w = 110                 # width of axis label area
+grid_size = SIZE - 2 * pad - header_w
+cell = grid_size // 2
 grid_x0 = pad + header_w
 grid_y0 = pad + header_w
-grid_size = SIZE - grid_x0 - pad
-cell = grid_size // 2
 grid_x1 = grid_x0 + 2 * cell
 grid_y1 = grid_y0 + 2 * cell
 
